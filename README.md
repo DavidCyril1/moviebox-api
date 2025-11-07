@@ -124,9 +124,11 @@ The API will be available at `http://localhost:5000`
 
 ### Download Proxy
 - Automatic header injection for CDN access
-- Stream-based proxying for large video files
+- Stream-based proxying for large video files (no timeout limits)
 - Bypasses browser restrictions with proper referer headers
 - Descriptive filenames with title, season, episode, and quality information
+- HTTPS URL generation for secure downloads
+- Proper error handling and stream cleanup for interrupted downloads
 
 ### API Compatibility
 - Maintains compatibility with original Python moviebox-api
@@ -209,16 +211,73 @@ The API is built as a single-file Express application (`index.js`) for simplicit
 
 ## Deployment
 
-The API is ready for deployment on any Node.js hosting platform:
+### Option 1: Cloudflare Workers (Recommended for Large Files)
+
+**Best for streaming and downloading large video files without timeout issues.**
+
+#### Why Cloudflare Workers?
+
+- ✅ **No timeout limits** - Downloads can run for hours as long as the user stays connected
+- ✅ **Resumable downloads** - Users can pause and resume downloads using HTTP range requests
+- ✅ **No file size limits** - Stream files of any size (1GB, 5GB, 10GB+) without buffering
+- ✅ **Global CDN** - Fast access worldwide with automatic edge caching
+- ✅ **Works on slow networks** - No interruptions for users with poor connections
+- ✅ **Efficient streaming** - No memory buffering, passes data directly through
+
+#### Setup Cloudflare Workers
+
+1. **Install Wrangler CLI** (Cloudflare's deployment tool):
+```bash
+npm install -g wrangler
+```
+
+2. **Login to Cloudflare**:
+```bash
+wrangler login
+```
+
+3. **Deploy to Cloudflare Workers**:
+```bash
+wrangler deploy
+```
+
+That's it! Your API will be live on Cloudflare's global network with a URL like:
+`https://moviebox-api.your-subdomain.workers.dev`
+
+#### Key Features of Cloudflare Version
+
+- **Streaming optimized**: Uses native `fetch()` API with `response.body` streaming
+- **No buffering**: Large files never loaded into memory
+- **Resumable downloads**: Full HTTP range request support on `/api/download`
+- **No dependencies**: Pure JavaScript, no npm packages needed
+- **Auto-scaling**: Handles traffic spikes automatically
+
+#### Resumable Downloads
+
+When users download large files:
+1. If they pause or lose connection, the download stops
+2. When they click "Resume", the browser requests the remaining bytes
+3. The worker serves only the missing part (e.g., "bytes 5000000-end")
+4. Download continues from where it left off
+
+This works automatically - no code changes needed!
+
+### Option 2: Traditional Node.js Hosting
+
+The Express version is ready for deployment on any Node.js hosting platform:
 
 1. Ensure all dependencies are installed
 2. Set `PORT` environment variable if needed (defaults to 5000)
 3. Start with `npm start` or `node index.js`
 
-### Environment Variables
+#### Environment Variables
 
 - `PORT` - Server port (default: 5000)
 - `MOVIEBOX_API_HOST` - Override default API host if needed
+
+#### Note on Traditional Hosting
+
+Most Node.js hosts have timeout limits (30-60 seconds), which may interrupt large downloads. For the best user experience with large video files, Cloudflare Workers is recommended.
 
 ## Project History
 
