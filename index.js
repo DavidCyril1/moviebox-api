@@ -665,7 +665,8 @@ app.get('/api/stream', async (req, res) => {
         // Express already decodes query params, so use req.query.url directly to avoid double-decoding
         const streamUrl = req.query.url || '';
         
-        if (!streamUrl || (!streamUrl.startsWith('https://bcdnw.hakunaymatata.com/') && !streamUrl.startsWith('https://valiw.hakunaymatata.com/'))) {
+        // Validate URL is from hakunaymatata.com domain
+        if (!streamUrl || !streamUrl.match(/^https:\/\/[a-z0-9]+\.hakunaymatata\.com\//)) {
             return res.status(400).json({
                 status: 'error',
                 message: 'Invalid stream URL'
@@ -832,7 +833,7 @@ function sanitizeFilename(filename) {
         .trim();
 }
 
-// Download proxy endpoint - adds proper headers to bypass CDN restrictions
+// Download proxy endpoint - adds proper headers to bypass CDN restrictions with resumable download support
 app.get('/api/download', async (req, res) => {
     try {
         const downloadUrl = req.query.url;
@@ -841,7 +842,8 @@ app.get('/api/download', async (req, res) => {
         const episode = req.query.episode;
         const quality = req.query.quality || '';
         
-        if (!downloadUrl || (!downloadUrl.startsWith('https://bcdnw.hakunaymatata.com/') && !downloadUrl.startsWith('https://valiw.hakunaymatata.com/'))) {
+        // Validate URL is from hakunaymatata.com domain  
+        if (!downloadUrl || !downloadUrl.match(/^https:\/\/[a-z0-9]+\.hakunaymatata\.com\//)) {
             return res.status(400).json({
                 status: 'error',
                 message: 'Invalid download URL'
@@ -867,55 +869,170 @@ app.get('/api/download', async (req, res) => {
         console.log(`Proxying download: ${downloadUrl}`);
         console.log(`Filename: ${filename}`);
         
-        // Make request with proper headers that allow CDN access
-        // No timeout for large file downloads
-        const response = await axios({
-            method: 'GET',
-            url: downloadUrl,
-            responseType: 'stream',
-            timeout: 0, // Disable timeout for large files
-            maxContentLength: Infinity,
-            maxBodyLength: Infinity,
-            headers: {
-                'User-Agent': 'okhttp/4.12.0',
-                'Referer': 'https://fmoviesunblocked.net/',
-                'Origin': 'https://fmoviesunblocked.net'
+        // Check if client sent a Range header for resumable downloads
+        const range = req.headers.range;
+        
+        // Get file size first with HEAD request
+        let fileSize;
+        let contentType = 'video/mp4';
+        
+        try {
+            const headResponse = await axios({
+                method: 'HEAD',
+                url: downloadUrl,
+                headers: {
+                    'User-Agent': 'okhttp/4.12.0',
+                    'Referer': 'https://fmoviesunblocked.net/',
+                    'Origin': 'https://fmoviesunblocked.net'
+                }
+            });
+            
+            fileSize = parseInt(headResponse.headers['content-length']);
+            contentType = headResponse.headers['content-type'] || contentType;
+        } catch (headError) {
+            console.log('HEAD request failed, will use GET to determine size');
+            // If HEAD fails, try a small range request
+            const testResponse = await axios({
+                method: 'GET',
+                url: downloadUrl,
+                responseType: 'stream',
+                headers: {
+                    'User-Agent': 'okhttp/4.12.0',
+                    'Referer': 'https://fmoviesunblocked.net/',
+                    'Origin': 'https://fmoviesunblocked.net',
+                    'Range': 'bytes=0-0'
+                }
+            });
+            
+            testResponse.data.destroy();
+            
+            const contentRange = testResponse.headers['content-range'];
+            if (contentRange) {
+                const match = contentRange.match(/bytes \d+-\d+\/(\d+)/);
+                if (match) {
+                    fileSize = parseInt(match[1]);
+                }
             }
-        });
+            
+            contentType = testResponse.headers['content-type'] || contentType;
+        }
         
-        // Forward the content-type and other relevant headers with custom filename
-        res.set({
-            'Content-Type': response.headers['content-type'],
-            'Content-Length': response.headers['content-length'],
-            'Content-Disposition': `attachment; filename="${filename}"`
-        });
+        if (!fileSize || isNaN(fileSize)) {
+            throw new Error('Could not determine file size');
+        }
         
-        // Pipe the video stream to the response with error handling
-        response.data.on('error', (error) => {
-            console.error('Download stream error:', error.message);
-            if (!res.headersSent) {
-                res.status(500).json({
+        if (range) {
+            // Parse range header
+            const parts = range.replace(/bytes=/, '').split('-');
+            let start = parseInt(parts[0], 10);
+            let end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+            
+            // Handle suffix-byte-range
+            if (isNaN(start) && !isNaN(end)) {
+                start = fileSize - end;
+                end = fileSize - 1;
+            }
+            
+            // Validate range
+            if (isNaN(start) || isNaN(end) || start < 0 || end >= fileSize || start > end) {
+                return res.status(416).set({
+                    'Content-Range': `bytes */${fileSize}`
+                }).json({
                     status: 'error',
-                    message: 'Download stream failed',
-                    error: error.message
+                    message: 'Range not satisfiable'
                 });
             }
-        });
-        
-        res.on('close', () => {
-            console.log('Client closed connection');
-            response.data.destroy();
-        });
-        
-        response.data.pipe(res);
+            
+            const chunkSize = (end - start) + 1;
+            
+            console.log(`Resumable download: bytes ${start}-${end}/${fileSize}`);
+            
+            // Make request with Range header to CDN
+            const response = await axios({
+                method: 'GET',
+                url: downloadUrl,
+                responseType: 'stream',
+                timeout: 0,
+                maxContentLength: Infinity,
+                maxBodyLength: Infinity,
+                headers: {
+                    'User-Agent': 'okhttp/4.12.0',
+                    'Referer': 'https://fmoviesunblocked.net/',
+                    'Origin': 'https://fmoviesunblocked.net',
+                    'Range': `bytes=${start}-${end}`
+                }
+            });
+            
+            // Set 206 Partial Content headers
+            res.status(206);
+            res.set({
+                'Content-Type': contentType,
+                'Content-Length': chunkSize,
+                'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+                'Content-Disposition': `attachment; filename="${filename}"`,
+                'Accept-Ranges': 'bytes',
+                'Cache-Control': 'no-cache'
+            });
+            
+            // Pipe the stream
+            response.data.on('error', (error) => {
+                console.error('Download stream error:', error.message);
+            });
+            
+            res.on('close', () => {
+                console.log('Client closed connection');
+                response.data.destroy();
+            });
+            
+            response.data.pipe(res);
+            
+        } else {
+            // No range, serve full file
+            console.log(`Full download: ${fileSize} bytes`);
+            
+            const response = await axios({
+                method: 'GET',
+                url: downloadUrl,
+                responseType: 'stream',
+                timeout: 0,
+                maxContentLength: Infinity,
+                maxBodyLength: Infinity,
+                headers: {
+                    'User-Agent': 'okhttp/4.12.0',
+                    'Referer': 'https://fmoviesunblocked.net/',
+                    'Origin': 'https://fmoviesunblocked.net'
+                }
+            });
+            
+            res.set({
+                'Content-Type': contentType,
+                'Content-Length': fileSize,
+                'Content-Disposition': `attachment; filename="${filename}"`,
+                'Accept-Ranges': 'bytes',
+                'Cache-Control': 'no-cache'
+            });
+            
+            response.data.on('error', (error) => {
+                console.error('Download stream error:', error.message);
+            });
+            
+            res.on('close', () => {
+                console.log('Client closed connection');
+                response.data.destroy();
+            });
+            
+            response.data.pipe(res);
+        }
         
     } catch (error) {
         console.error('Download proxy error:', error.message);
-        res.status(500).json({
-            status: 'error',
-            message: 'Failed to proxy download',
-            error: error.message
-        });
+        if (!res.headersSent) {
+            res.status(500).json({
+                status: 'error',
+                message: 'Failed to proxy download',
+                error: error.message
+            });
+        }
     }
 });
 

@@ -329,7 +329,8 @@ async function handleStream(url, request) {
     const urlObj = new URL(url);
     const streamUrl = urlObj.searchParams.get('url');
     
-    if (!streamUrl || (!streamUrl.startsWith('https://bcdnw.hakunaymatata.com/') && !streamUrl.startsWith('https://valiw.hakunaymatata.com/'))) {
+    // Validate URL is from hakunaymatata.com domain
+    if (!streamUrl || !streamUrl.match(/^https:\/\/[a-z0-9]+\.hakunaymatata\.com\//)) {
         return new Response(JSON.stringify({
             status: 'error',
             message: 'Invalid stream URL'
@@ -447,7 +448,8 @@ async function handleDownload(url, request) {
     const episode = urlObj.searchParams.get('episode');
     const quality = urlObj.searchParams.get('quality') || '';
     
-    if (!downloadUrl || (!downloadUrl.startsWith('https://bcdnw.hakunaymatata.com/') && !downloadUrl.startsWith('https://valiw.hakunaymatata.com/'))) {
+    // Validate URL is from hakunaymatata.com domain
+    if (!downloadUrl || !downloadUrl.match(/^https:\/\/[a-z0-9]+\.hakunaymatata\.com\//)) {
         return new Response(JSON.stringify({
             status: 'error',
             message: 'Invalid download URL'
@@ -668,6 +670,20 @@ function getHomePage() {
             font-size: 0.8em;
             font-weight: bold;
         }
+        .example-link {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 0.9em;
+            margin: 5px 5px 5px 0;
+            transition: background 0.3s;
+        }
+        .example-link:hover {
+            background: #5a67d8;
+        }
     </style>
 </head>
 <body>
@@ -692,22 +708,90 @@ function getHomePage() {
             </div>
             
             <div class="endpoint">
-                <h3>📥 API Endpoints</h3>
-                <p><strong>All endpoints fully operational with streaming support:</strong></p>
-                <ul style="list-style: none; padding-left: 0; margin-top: 10px;">
-                    <li>🔍 <code>GET /api/search/:query</code> - Search movies & TV series</li>
-                    <li>📋 <code>GET /api/info/:movieId</code> - Get detailed information</li>
-                    <li>📥 <code>GET /api/sources/:movieId</code> - Get download sources</li>
-                    <li>🏠 <code>GET /api/homepage</code> - Featured content</li>
-                    <li>🔥 <code>GET /api/trending</code> - Trending content</li>
-                    <li>📺 <code>GET /api/stream?url=...</code> - Video streaming (with seeking)</li>
-                    <li>⚡ <code>GET /api/download?url=...</code> - Download proxy (resumable)</li>
+                <h3>🔍 Search Movies & TV Series</h3>
+                <p>Search for any movie or TV series and get real results from MovieBox database.</p>
+                <span class="status">WORKING</span>
+                <br><br>
+                <a href="/api/search/avatar" class="example-link">Search: Avatar</a>
+                <a href="/api/search/spider-man" class="example-link">Search: Spider-Man</a>
+                <a href="/api/search/wednesday" class="example-link">Search: Wednesday</a>
+            </div>
+            
+            <div class="endpoint">
+                <h3>📋 Movie Information</h3>
+                <p>Get detailed information about any movie including cast, description, ratings, and metadata.</p>
+                <span class="status">WORKING</span>
+                <br><br>
+                <a href="/api/info/8906247916759695608" class="example-link">Avatar Info</a>
+                <a href="/api/info/3815343854912427320" class="example-link">Spider-Man Info</a>
+                <a href="/api/info/9028867555875774472" class="example-link">Wednesday Info</a>
+            </div>
+            
+            <div class="endpoint">
+                <h3>📥 Download Sources</h3>
+                <p>Get real download links with multiple quality options. Includes both direct URLs and proxy URLs that work in browsers.</p>
+                <p><strong>For Movies:</strong> Use movie ID only</p>
+                <p><strong>For TV Episodes:</strong> Add season and episode parameters: <code>?season=1&episode=1</code></p>
+                <span class="status">WORKING</span>
+                <br><br>
+                <strong>Movie Downloads:</strong><br>
+                <a href="/api/sources/8906247916759695608" class="example-link">Avatar Movie</a>
+                <a href="/api/sources/3815343854912427320" class="example-link">Spider-Man Movie</a>
+                <br><br>
+                <strong>TV Episode Downloads:</strong><br>
+                <a href="/api/sources/9028867555875774472?season=1&episode=1" class="example-link">Wednesday S1E1</a>
+                <a href="/api/sources/9028867555875774472?season=1&episode=2" class="example-link">Wednesday S1E2</a>
+                <a href="/api/sources/9028867555875774472?season=1&episode=3" class="example-link">Wednesday S1E3</a>
+            </div>
+            
+            <div class="endpoint">
+                <h3>🏠 Homepage Content</h3>
+                <p>Get the latest homepage content from MovieBox including featured movies and recommendations.</p>
+                <span class="status">WORKING</span>
+                <br><br>
+                <a href="/api/homepage" class="example-link">View Homepage</a>
+            </div>
+            
+            <div class="endpoint">
+                <h3>🔥 Trending Content</h3>
+                <p>Get currently trending movies and TV series with real-time data from MovieBox.</p>
+                <span class="status">WORKING</span>
+                <br><br>
+                <a href="/api/trending" class="example-link">View Trending</a>
+            </div>
+            
+            <div class="endpoint">
+                <h3>📺 Video Streaming</h3>
+                <p>Stream videos with full seeking and playback support. Handles HTTP range requests for smooth playback.</p>
+                <span class="status">WORKING</span>
+                <br><br>
+                <p><strong>Usage:</strong> <code>/api/stream?url=[encoded-video-url]</code></p>
+                <p><strong>Features:</strong></p>
+                <ul style="color: #666; padding-left: 20px;">
+                    <li>Full video streaming with range request support (HTTP 206)</li>
+                    <li>Seeking and skipping without buffering issues</li>
+                    <li>Proper Content-Type, Content-Length, and Accept-Ranges headers</li>
+                    <li>Compatible with HTML5 video players</li>
                 </ul>
+                <p><small>Note: Stream URLs are automatically provided in the sources endpoint response</small></p>
+            </div>
+            
+            <div class="endpoint">
+                <h3>⚡ Download Proxy</h3>
+                <p>Proxy endpoint that adds proper headers to bypass CDN restrictions for direct downloads.</p>
+                <span class="status">WORKING</span>
+                <br><br>
+                <p><strong>Usage:</strong> <code>/api/download?url=[encoded-video-url]</code></p>
+                <p><small>Note: Download URLs are automatically provided in the sources endpoint response</small></p>
             </div>
             
             <div style="text-align: center; margin-top: 30px; padding: 20px; background: #f7fafc; border-radius: 10px;">
-                <h3 style="color: #2d3748; margin-bottom: 10px;">Ready for Cloudflare Deployment</h3>
-                <p style="color: #666;">Deploy with: <code>wrangler deploy</code></p>
+                <h3 style="color: #2d3748; margin-bottom: 10px;">API Status</h3>
+                <p><strong>All 7 endpoints operational</strong> with real MovieBox data</p>
+                <p style="color: #666; font-size: 0.9em; margin-top: 10px;">
+                    Powered by Cloudflare Workers with region bypass,<br>
+                    mobile authentication headers, and video streaming support
+                </p>
             </div>
         </div>
     </div>
