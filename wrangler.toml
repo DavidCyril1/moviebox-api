@@ -1,4 +1,4 @@
-name = "movie-api"
+name = "cdn2"
 main = "worker.js"
 compatibility_date = "2025-08-18"
 
