@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "MovieBox"
+version = "1.0.0"
+id = "artifacts/moviebox"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22783
+
+[services.development]
+run = "pnpm --filter @workspace/moviebox run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/moviebox", "run", "build" ]
+publicDir = "artifacts/moviebox/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22783"
+BASE_PATH = "/"
