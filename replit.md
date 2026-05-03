@@ -1,64 +1,82 @@
-# MovieBox Workspace
+# Project Overview
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. A MovieBox movie/TV streaming app with an Express API backend and React frontend.
+This is a complete Node.js Express API server that provides full access to MovieBox content through RESTful endpoints. Successfully converted from the original Python moviebox-api library, this API now offers comprehensive functionality to search for movies and TV series, get trending content, retrieve detailed information, and fetch real streaming download sources with working direct links.
 
-## Artifacts
+## User Preferences
 
-- **`artifacts/moviebox`** — React + Vite + Tailwind frontend (port 22783, preview at `/`)
-- **`artifacts/api-server`** — Express 5 API server (port 8080, preview at `/api`)
+Preferred communication style: Simple, everyday language.
 
-## Stack
+## System Architecture
 
-- **Monorepo tool**: pnpm workspaces
-- **Node.js version**: 24
-- **Package manager**: pnpm
-- **TypeScript version**: 5.9
-- **API framework**: Express 5
-- **Frontend**: React + Vite + TanStack Query + Wouter routing + Tailwind CSS
-- **Build**: esbuild (ESM bundle for api-server)
+**Runtime Environment**
+- Node.js 20.x with Express.js framework
+- RESTful API architecture serving JSON responses
+- Cookie-based session management for MovieBox API authentication
+- CORS-enabled for cross-origin requests
 
-## MovieBox API Routes (api-server)
+**Application Structure**
+- Entry point: `index.js` containing the complete Express server
+- Single-file architecture with all routes and middleware
+- Asynchronous request handling with proper error management
+- Session cookies managed via tough-cookie and axios-cookiejar-support
 
-All routes under `/api/`:
+**API Endpoints (ALL WORKING)**
+- `GET /` - Health check and API documentation
+- `GET /api/homepage` - Real homepage content from MovieBox
+- `GET /api/trending` - Live trending movies and TV series
+- `GET /api/search/:query` - Search for movies and TV series with real results
+- `GET /api/info/:movieId` - Detailed movie/series information with metadata
+- `GET /api/sources/:movieId` - **WORKING DOWNLOAD LINKS** - Real streaming sources with direct URLs
 
-| Route | Description |
-|---|---|
-| `GET /api/healthz` | Health check |
-| `GET /api/homepage` | Home page curated content |
-| `GET /api/trending` | Trending movies/TV (falls back to homepage subjectList) |
-| `GET /api/search/:query` | Search movies/TV series (POST to upstream) |
-| `GET /api/info/:movieId` | Movie/series detail info |
-| `GET /api/sources/:movieId` | Download/stream sources |
-| `GET /api/stream` | Proxy video stream with range support |
-| `GET /api/download` | Proxy file download with proper filename |
+**Design Principles**
+- Converted from Python moviebox-api to JavaScript/Express
+- Maintains API compatibility with original library functionality
+- Proper authentication flow with MovieBox backend services
+- Error handling with detailed status responses
 
-## Upstream API
+## External Dependencies
 
-- Host: `h5.aoneroom.com` (configurable via `MOVIEBOX_API_HOST` env var)
-- Cookie jar: initialized via `/wefeed-h5-bff/app/get-latest-app-pkgs?app_name=moviebox`
-- Content base path: `/wefeed-h5-bff/web/`
-- Trending response key: `subjectList` (not `items`)
-- Search is a POST with JSON body `{keyword, page, perPage, subjectType}`
+**Runtime Dependencies**
+- Node.js 20.x runtime environment
+- Express.js 4.19.2 web framework
+- Axios for HTTP requests with cookie jar support
+- Cheerio for potential HTML parsing
+- tough-cookie and axios-cookiejar-support for session management
 
-## Frontend Pages
+**Third-party Services**
+- MovieBox API backend (multiple mirror hosts supported)
+- Configured to use moviebox.pk as primary host
 
-- `/` — Home with hero search + trending grid
-- `/trending` — Full trending page
-- `/search?q=...` — Search results
-- `/movie/:id` — Movie detail + sources/download
+**Development Tools**
+- npm package manager for dependency management
+- Replit workflows for server management
 
-## Key Commands
+**Database/Storage**
+- No local database - all data fetched from MovieBox API
+- Session cookies stored in memory for API authentication
 
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-server run dev` — run API server locally
-- `pnpm --filter @workspace/moviebox run dev` — run frontend locally
+## Recent Changes
 
-## Important Notes
+**2025-11-06**: Cloudflare Workers version created for optimal large file streaming
+- ✓ Created production-ready Cloudflare Workers implementation (worker.js)
+- ✓ Implemented proper HTTP range request support for resumable downloads
+- ✓ Fixed cookie handling to properly extract name=value pairs from Set-Cookie headers
+- ✓ Added streaming support without memory buffering for files of any size
+- ✓ Both /api/stream and /api/download now support pause/resume functionality
+- ✓ No timeout limits - downloads run as long as client stays connected
+- ✓ Configuration file (wrangler.toml) created for easy deployment
+- ✓ Comprehensive deployment documentation added to README
+- ✅ CLOUDFLARE READY: Optimized for large file downloads with resumable support
 
-- The api-server uses `@workspace/db` (postgres/drizzle) in shared deps but MovieBox routes don't use any DB
-- Cookie jar is shared across all requests (singleton `CookieJar` instance)
-- Trending endpoint tries `/web/subject/trending` first, falls back to `/web/home` subjectList
-- Stream/download routes support HTTP range requests for seek support
+**2025-01-20**: Successfully completed full Python moviebox-api to JavaScript conversion
+- ✓ All 6 API endpoints fully functional with real MovieBox data
+- ✓ Sources endpoint breakthrough: Region bypass headers implemented successfully
+- ✓ Real download links working for Avatar, Spider-Man, and other movies
+- ✓ Enhanced mobile headers using PCAP analysis findings (okhttp/4.12.0 user agent)
+- ✓ Authentication system with session cookies working perfectly
+- ✓ CDN access to valiw.hakunaymatata.com for direct movie downloads
+- ✓ Mobile-friendly HTML documentation with example links created
+- ✓ Comprehensive README.md documentation completed
+- ✅ PROJECT COMPLETE: Full API with docs ready for deployment
