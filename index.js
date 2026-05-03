@@ -70,7 +70,59 @@ function normalizeListResponse(data, page) {
 }
 
 app.get('/', (req, res) => {
-  res.send('<!DOCTYPE html><html><head><meta charset="utf-8"><title>MovieBox API</title></head><body><h1>MovieBox API Server</h1><p>Gifted Movies API backend</p></body></html>');
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MovieBox API Docs</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+  <style>
+    body { margin: 0; background: #0b1020; }
+    .topbar { display: none; }
+    #swagger-ui { box-sizing: border-box; }
+    .swagger-ui .info .title { color: #e2e8f0; }
+    .swagger-ui .info p, .swagger-ui .info li, .swagger-ui .opblock-summary-description { color: #94a3b8; }
+    .swagger-ui .scheme-container, .swagger-ui .info, .swagger-ui .opblock, .swagger-ui .models, .swagger-ui .try-out { background: #111827 !important; }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    window.ui = SwaggerUIBundle({
+      url: '/openapi.json',
+      dom_id: '#swagger-ui',
+      deepLinking: true,
+      displayRequestDuration: true,
+      docExpansion: 'list',
+      filter: true,
+      persistAuthorization: true,
+      syntaxHighlight: { activated: true },
+      layout: 'BaseLayout'
+    });
+  </script>
+</body>
+</html>`);
+});
+
+app.get('/openapi.json', (req, res) => {
+  res.json({
+    openapi: '3.0.3',
+    info: {
+      title: 'MovieBox API',
+      version: '1.0.0',
+      description: 'Gifted Movies API backend for live testing'
+    },
+    servers: [{ url: '/' }],
+    paths: {
+      '/api/homepage': { get: { summary: 'Get homepage content', responses: { '200': { description: 'OK' } } } },
+      '/api/trending': { get: { summary: 'Get trending content', parameters: [{ name: 'page', in: 'query', schema: { type: 'integer' } }], responses: { '200': { description: 'OK' } } } },
+      '/api/search/{query}': { get: { summary: 'Search movies and TV series', parameters: [{ name: 'query', in: 'path', required: true, schema: { type: 'string' } }, { name: 'page', in: 'query', schema: { type: 'integer' } }, { name: 'type', in: 'query', schema: { type: 'integer' } }], responses: { '200': { description: 'OK' } } } },
+      '/api/info/{movieId}': { get: { summary: 'Get detailed information', parameters: [{ name: 'movieId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'OK' } } } },
+      '/api/sources/{movieId}': { get: { summary: 'Get streaming sources', parameters: [{ name: 'movieId', in: 'path', required: true, schema: { type: 'string' } }, { name: 'season', in: 'query', schema: { type: 'integer' } }, { name: 'episode', in: 'query', schema: { type: 'integer' } }], responses: { '200': { description: 'OK' } } } }
+    }
+  });
 });
 
 app.get('/api/homepage', async (req, res) => {
