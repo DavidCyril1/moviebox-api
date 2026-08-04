@@ -26,6 +26,8 @@ Preferred communication style: Simple, everyday language.
 - `GET /` - Health check and API documentation
 - `GET /api/homepage` - Real homepage content from MovieBox
 - `GET /api/trending` - Live trending movies and TV series
+- `GET /api/categories` - List all available content categories
+- `GET /api/category/:categoryPath` - Get content from specific categories (Anime, K-Drama, Action, Kids, etc.)
 - `GET /api/search/:query` - Search for movies and TV series with real results
 - `GET /api/info/:movieId` - Detailed movie/series information with metadata
 - `GET /api/sources/:movieId` - **WORKING DOWNLOAD LINKS** - Real streaming sources with direct URLs
@@ -58,6 +60,14 @@ Preferred communication style: Simple, everyday language.
 - Session cookies stored in memory for API authentication
 
 ## Recent Changes
+
+**2025-11-22**: Added category browsing functionality
+- ✓ Added `/api/categories` endpoint to list all available categories
+- ✓ Added `/api/category/:categoryPath` endpoint to browse category content
+- ✓ 19+ categories available: Anime, K-Drama, Action, Horror, Kids content & more
+- ✓ Updated HTML documentation in both Express and Cloudflare Worker versions
+- ✓ Updated README.md with category endpoint documentation
+- ✅ CATEGORIES READY: Users can now browse Anime, K-Drama, Action, Kids & 15+ more categories
 
 **2025-11-06**: Cloudflare Workers version created for optimal large file streaming
 - ✓ Created production-ready Cloudflare Workers implementation (worker.js)
