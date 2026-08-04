@@ -6,7 +6,7 @@ const ALLOWED_DOMAINS = [
     'cineverse.sbs',
     'sbs.cineverse.sbs',
     'moviex.name.ng',
-    'www.moviex.zone.id',
+    'sbs9.cineverse.sbs',
     'localhost',
     '127.0.0.1',
     '::1',
