@@ -3,7 +3,7 @@
 
 // Allowed domains list - ONLY these domains can access the API
 const ALLOWED_DOMAINS = [
-    'moviex.zone.id',
+    'cineverse.sbs',
     'moviex.abztech.my.id',
     'moviex.name.ng',
     'www.moviex.zone.id',
