@@ -1,20 +1,31 @@
 {
-  "name": "workspace",
+  "name": "moviebox-api",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "Unofficial MovieBox scraper API",
+  "main": "dist/index.js",
+  "type": "module",
   "scripts": {
-    "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "tsx src/index.ts",
+    "start": "node dist/src/index.js",
+    "build": "tsc"
   },
-  "keywords": [],
+  "keywords": [
+    "moviebox",
+    "scraper",
+    "api"
+  ],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
-    "axios": "^1.11.0",
-    "axios-cookiejar-support": "^6.0.4",
-    "cheerio": "^1.1.2",
-    "express": "^4.21.2",
-    "tough-cookie": "^5.1.2"
+    "@hono/node-server": "2.1.1",
+    "@netlify/functions": "^3.0.0",
+    "hono": "4.13.2",
+    "undici": "8.10.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.3",
+    "@vercel/node": "5.10.1",
+    "tsx": "4.19.4",
+    "typescript": "5.8.3"
   }
 }
