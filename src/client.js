@@ -68,7 +68,11 @@ const REGISTRATION_PROXIES = [
   "191.96.254.138:6185:cbjxuiif:9y3vzs5v46eg",
 ];
 
-const FALLBACK_TOKEN = process.env.MB_FALLBACK_TOKEN || process.env.MB_TOKEN || "";
+const FALLBACK_TOKEN =
+  process.env.MB_FALLBACK_TOKEN ||
+  process.env.MB_TOKEN ||
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjY3ODg5NDM2NTY5Mzk1NzI1MDQsInV0cCI6MSwiZXhwIjoxODAwMjUyOTI4LCJpYXQiOjE3OTI0NzY2Mjh9.VZQEvsuWTrsAmOaRwTLSOoP-kMBp8sIBTM_uJ-niTwM";
+
 
 const REQUEST_TIMEOUT_MS = Number(process.env.MB_REQUEST_TIMEOUT_MS || 20_000);
 const GUEST_TOTAL_TIMEOUT_MS = Number(process.env.MB_GUEST_TIMEOUT_MS || 25_000);
