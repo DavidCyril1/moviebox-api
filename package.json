@@ -1,31 +1,23 @@
 {
   "name": "moviebox-api",
-  "version": "1.0.0",
-  "description": "Unofficial MovieBox scraper API",
-  "main": "dist/index.js",
+  "version": "1.2.0",
+  "description": "Unofficial MovieBox scraper API - KataBump ready (pure JS, PORT env (default 3000))",
+  "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx src/index.ts",
-    "start": "node dist/src/index.js",
-    "build": "tsc"
+    "start": "node index.js",
+    "pm2:start": "pm2 start ecosystem.config.cjs",
+    "pm2:stop": "pm2 stop moviebox-api",
+    "pm2:restart": "pm2 restart moviebox-api",
+    "pm2:logs": "pm2 logs moviebox-api",
+    "pm2:status": "pm2 status"
   },
-  "keywords": [
-    "moviebox",
-    "scraper",
-    "api"
-  ],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "@hono/node-server": "2.1.1",
-    "@netlify/functions": "^3.0.0",
-    "hono": "4.13.2",
-    "undici": "8.10.0"
+    "@hono/node-server": "1.13.7",
+    "hono": "4.6.12",
+    "undici": "6.21.0"
   },
-  "devDependencies": {
-    "@types/node": "22.15.3",
-    "@vercel/node": "5.10.1",
-    "tsx": "4.19.4",
-    "typescript": "5.8.3"
+  "engines": {
+    "node": ">=18"
   }
 }
